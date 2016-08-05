@@ -3,8 +3,12 @@ package com.example.hyunwoo.samplemelonapi;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +19,8 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView responseTextView;
+    ListView listView;
+    ArrayAdapter<String> mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,9 +28,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // View Initialize
-        responseTextView = (TextView) findViewById(R.id.responseString);
+        listView = (ListView) findViewById(R.id.listView);
+        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        listView.setAdapter(mAdapter);
 
 
+
+
+        // API 연결 Task 실행!
         new MelonTask().execute(1, 50);
 
 
@@ -47,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 URL url = new URL(urlText);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestProperty("Accept", "application/json");
                 conn.setRequestProperty("appKey", "3e0923ca-353e-35e2-9265-eb3227a53ef9");
                 int code = conn.getResponseCode();
                 if (code == HttpURLConnection.HTTP_OK) {        // == CODE 200 (성공)
@@ -79,18 +88,13 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(responseString);
             // MelonTask가 execute된 이후에 실행되는 callback method
 
-            if (responseString != null) {
-                responseTextView.setText(responseString);
-            } else {
-                Toast.makeText(MainActivity.this, "ERROR", Toast.LENGTH_SHORT).show();
-            }
-
-
             // Pasing을 여기서!!
-            
+            Gson gson = new Gson();
+            MelonResult result = gson.fromJson(responseString, MelonResult.class);
 
-
-
+            for (Song song : result.melon.songs.song) {
+                mAdapter.add(song.songName);
+            }
 
         }
     }
